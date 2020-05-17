@@ -23,7 +23,7 @@ source-repository head
 library
   hs-source-dirs:      src
   exposed-modules:     TidyTests
-                       
+                     , TidyTests.FileUtils 
 
   build-depends:       base >= 4.11.1.0 && < 4.13
                      , directory
@@ -48,7 +48,6 @@ executable tidy-tests
 
   build-depends:       base >= 4.11.1.0 && < 4.13
                      , tidy-tests
-                     
 
   ghc-options:         -Wall
                        -threaded
@@ -72,9 +71,12 @@ test-suite tidy-tests-test
 
   build-depends:       base >= 4.11.1.0 && < 4.13
                      , tidy-tests
+                     , directory
+                     , HUnit
                      , tasty
                      , tasty-discover
-                     
+                     , tasty-hunit
+  other-modules:       TidyTests.FileUtilsSpec
 
   ghc-options:         -Wall
                        -threaded

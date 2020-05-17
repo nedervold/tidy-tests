@@ -23,9 +23,7 @@ import System.FilePath
   )
 import System.IO (hPutStrLn, stderr)
 import Text.Printf (printf)
-
-errPutStrLn :: String -> IO ()
-errPutStrLn = hPutStrLn stderr
+import TidyTests.FileUtils
 
 usage :: IO ()
 usage = do
@@ -52,7 +50,7 @@ runTidyTests = do
 
 appendInputToMatchingTestFile :: FilePath -> IO ()
 appendInputToMatchingTestFile sourceFP = do
-  projDir <- projectDir sourceFP
+  projDir <- getProjectDir' sourceFP
   let relPath = makeRelative (projDir </> "src") (takeDirectory sourceFP)
   let testFilename = specName (takeFileName sourceFP)
   let testDirPath = normalise (projDir </> "test" </> relPath)
@@ -71,17 +69,3 @@ specName :: FilePath -> FilePath
 specName fn = basename ++ "Spec" <.> ext
   where
     (basename, ext) = splitExtension fn
-
-projectDir :: FilePath -> IO FilePath
-projectDir sourceFP = go $ takeDirectory sourceFP
-  where
-    go :: FilePath -> IO FilePath
-    go "/" = do
-      errPutStrLn $ printf "Could not find a cabal file above %s." sourceFP
-      exitFailure
-    go fp = do
-      contents <- listDirectory fp
-      if any isCabal contents
-        then return fp
-        else go $ takeDirectory fp
-    isCabal fp = takeExtension fp == ".cabal"
