@@ -37,6 +37,7 @@ jobs:
     - name: Build
       run: |
         stack install tasty-discover
+	export PATH=$PATH:$HOME/.local/bin
         cabal v2-update
         cabal v2-build --enable-tests --enable-benchmarks
 
