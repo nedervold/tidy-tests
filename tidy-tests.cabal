@@ -72,6 +72,8 @@ test-suite tidy-tests-test
 
   build-depends:       base >= 4.11.1.0 && < 4.13
                      , tidy-tests
+                     , tasty
+                     , tasty-discover
                      
 
   ghc-options:         -Wall
