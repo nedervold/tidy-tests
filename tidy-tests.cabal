@@ -71,10 +71,12 @@ test-suite tidy-tests-test
   build-depends:       base >= 4.11.1.0 && < 4.13
                      , tidy-tests
                      , directory
+                     , filepath
                      , HUnit
                      , tasty
                      , tasty-discover
                      , tasty-hunit
+                     , temporary
   other-modules:       TidyTests.FileUtilsSpec
 
   ghc-options:         -Wall
