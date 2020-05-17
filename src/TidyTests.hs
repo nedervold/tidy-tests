@@ -1,33 +1,20 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module TidyTests
   ( runTidyTests
   ) where
 
-import Control.Monad (unless)
-import System.Directory (doesDirectoryExist, doesFileExist, makeAbsolute)
+import Data.Maybe (fromMaybe)
+import System.Directory (createDirectoryIfMissing, doesFileExist, makeAbsolute)
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
-import System.FilePath
-  ( (</>)
-  , makeRelative
-  , normalise
-  , takeDirectory
-  , takeFileName
-  )
-import System.IO (hPutStrLn, stderr)
+import System.FilePath ((</>))
+import System.IO (IOMode(..), hPutStrLn, stderr, withFile)
 import Text.Printf (printf)
 import TidyTests.FileUtils
 
 errPutStrLn :: String -> IO ()
 errPutStrLn = hPutStrLn stderr
-
-getProjectDir' :: FilePath -> IO FilePath
-getProjectDir' sourceFP = do
-  mRes <- getProjectDir sourceFP
-  case mRes of
-    Nothing -> do
-      errPutStrLn $ printf "Could not find a cabal file above %s." sourceFP
-      exitFailure
-    Just fp -> return fp
 
 usage :: IO ()
 usage = do
@@ -44,7 +31,7 @@ runTidyTests = do
       if b
         then do
           sourceFP <- makeAbsolute arg
-          appendInputToMatchingTestFile sourceFP
+          copyInputToTestFile sourceFP
         else do
           errPutStrLn $ printf "Source file %s does not exist." arg
           usage
@@ -52,19 +39,18 @@ runTidyTests = do
       errPutStrLn "wrong number of arguments"
       usage
 
-appendInputToMatchingTestFile :: FilePath -> IO ()
-appendInputToMatchingTestFile sourceFP = do
-  projDir <- getProjectDir' sourceFP
-  let relPath = makeRelative (projDir </> "src") (takeDirectory sourceFP)
-  let testFilename = specName (takeFileName sourceFP)
-  let testDirPath = normalise (projDir </> "test" </> relPath)
-  putStrLn "Hello, from tidy-tests.  Not yet appending."
-  putStrLn $
-    printf
-      "project-dir=%s; relPath=%s testFilename=%s appendingTo=%s"
-      projDir
-      relPath
-      testFilename
-      (testDirPath </> testFilename)
-  b <- doesDirectoryExist testDirPath
-  unless b $ putStrLn $ printf "Must create directory %s" testDirPath
+copyInputToTestFile :: FilePath -> IO ()
+copyInputToTestFile sourceFP = do
+  let err = error $ printf "Could not find a cabal file above %s." sourceFP
+  Paths {..} <- fromMaybe err <$> getPaths sourceFP
+  createDirectoryIfMissing True (projectDir </> "test" </> specDirRelPath)
+  fileExists <- doesFileExist specFilePath
+  if fileExists
+    then withFile specFilePath AppendMode $ \h -> do
+           hPutStrLn h "" -- a newline just 'cuz
+           src <- getContents
+           hPutStrLn h src
+    else withFile specFilePath WriteMode $ \h -> do
+           hPutStrLn h $ printf "module %s where" specModuleName
+           src <- getContents
+           hPutStrLn h src
