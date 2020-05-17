@@ -72,9 +72,11 @@ test-suite tidy-tests-test
                      , tidy-tests
                      , directory
                      , filepath
+                     , hedgehog
                      , HUnit
                      , tasty
                      , tasty-discover
+                     , tasty-hedgehog
                      , tasty-hunit
                      , temporary
   other-modules:       TidyTests.FileUtilsSpec

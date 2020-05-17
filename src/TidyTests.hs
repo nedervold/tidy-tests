@@ -25,6 +25,18 @@ import System.IO (hPutStrLn, stderr)
 import Text.Printf (printf)
 import TidyTests.FileUtils
 
+errPutStrLn :: String -> IO ()
+errPutStrLn = hPutStrLn stderr
+
+getProjectDir' :: FilePath -> IO FilePath
+getProjectDir' sourceFP = do
+  mRes <- getProjectDir sourceFP
+  case mRes of
+    Nothing -> do
+      errPutStrLn $ printf "Could not find a cabal file above %s." sourceFP
+      exitFailure
+    Just fp -> return fp
+
 usage :: IO ()
 usage = do
   progName <- getProgName

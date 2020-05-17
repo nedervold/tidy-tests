@@ -22,9 +22,6 @@ import System.FilePath
 import System.IO (hPutStrLn, stderr)
 import Text.Printf (printf)
 
-errPutStrLn :: String -> IO ()
-errPutStrLn = hPutStrLn stderr
-
 getProjectDir :: FilePath -> IO (Maybe FilePath)
 getProjectDir sourceFP = go $ takeDirectory sourceFP
   where
@@ -37,16 +34,10 @@ getProjectDir sourceFP = go $ takeDirectory sourceFP
         else go $ takeDirectory fp
     isCabal fp = takeExtension fp == ".cabal"
 
-getProjectDir' :: FilePath -> IO FilePath
-getProjectDir' sourceFP = go $ takeDirectory sourceFP
-  where
-    go :: FilePath -> IO FilePath
-    go "/" = do
-      errPutStrLn $ printf "Could not find a cabal file above %s." sourceFP
-      exitFailure
-    go fp = do
-      contents <- listDirectory fp
-      if any isCabal contents
-        then return fp
-        else go $ takeDirectory fp
-    isCabal fp = takeExtension fp == ".cabal"
+getDirPathRelativeToSrcDir :: FilePath -> FilePath -> FilePath
+getDirPathRelativeToSrcDir projDir srcFilepath =
+  makeRelative (projDir </> "src") (takeDirectory srcFilepath)
+
+getDirPathRelativeToTestDir :: FilePath -> FilePath -> FilePath
+getDirPathRelativeToTestDir projDir srcFilepath =
+  projDir </> "test" </> getDirPathRelativeToSrcDir projDir srcFilepath
