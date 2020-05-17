@@ -1,0 +1,6 @@
+#!/bin/sh
+stack exec tasty-discover -- $@
+
+# tasty-discover is not installed on the test machines, but we need
+# one to run the tests.  It's part of the project, so we ask stack to
+# find it for us.
