@@ -3,22 +3,14 @@ module TidyTests
   ) where
 
 import Control.Monad (unless)
-import System.Directory
-  ( doesDirectoryExist
-  , doesFileExist
-  , listDirectory
-  , makeAbsolute
-  )
+import System.Directory (doesDirectoryExist, doesFileExist, makeAbsolute)
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
 import System.FilePath
-  ( (<.>)
-  , (</>)
+  ( (</>)
   , makeRelative
   , normalise
-  , splitExtension
   , takeDirectory
-  , takeExtension
   , takeFileName
   )
 import System.IO (hPutStrLn, stderr)
@@ -76,8 +68,3 @@ appendInputToMatchingTestFile sourceFP = do
       (testDirPath </> testFilename)
   b <- doesDirectoryExist testDirPath
   unless b $ putStrLn $ printf "Must create directory %s" testDirPath
-
-specName :: FilePath -> FilePath
-specName fn = basename ++ "Spec" <.> ext
-  where
-    (basename, ext) = splitExtension fn

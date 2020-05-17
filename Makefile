@@ -19,7 +19,7 @@ hlint :
 	hlint app src test | more
 
 .PHONY: clean
-clean :
+clean : hindent
 	find . -name '*~' -delete
 	find . -name '#*' -delete
 	find . -name '.DS_Store' -delete

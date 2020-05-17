@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module TidyTests.FileUtilsSpec where
 
 import Hedgehog
@@ -6,7 +8,6 @@ import Hedgehog.Range (linear)
 import System.Directory (createDirectoryIfMissing, getTemporaryDirectory)
 import System.FilePath
 import System.IO.Temp (withSystemTempDirectory)
-import Test.Tasty
 import Test.Tasty.HUnit
 import TidyTests.FileUtils
 
@@ -29,16 +30,22 @@ unit_getProjectDir_withProject =
     touch :: FilePath -> IO ()
     touch fp = writeFile fp ""
 
+projectDirAndSrcPath :: MonadGen m => m (FilePath, FilePath)
+projectDirAndSrcPath = do
+  projectDir' <- filePath
+  srcPath' <- sourceFilePath' projectDir'
+  return (projectDir', srcPath')
+
 filePathSegment :: MonadGen m => m String
 filePathSegment = (:) <$> upper <*> list rng alphaNum
   where
-    rng = linear 0 15
+    rng = linear 0 5
 
 sourceFileName :: MonadGen m => m String
 sourceFileName = (++ ".hs") <$> filePathSegment
 
-sourceFilePath :: MonadGen m => FilePath -> m FilePath
-sourceFilePath projectDir = do
+sourceFilePath' :: MonadGen m => FilePath -> m FilePath
+sourceFilePath' projectDir = do
   fp <- filePath
   srcFN <- sourceFileName
   return (projectDir </> "src" </> fp </> srcFN)
@@ -46,15 +53,28 @@ sourceFilePath projectDir = do
 filePath :: MonadGen m => m FilePath
 filePath = foldl1 (</>) <$> list rng filePathSegment
   where
-    rng = linear 1 16
+    rng = linear 1 6
 
-hprop_getDirPathRelativeToSrcDir :: Property
-hprop_getDirPathRelativeToSrcDir =
+paths :: MonadGen m => m Paths
+paths = do
+  (pd, sp) <- projectDirAndSrcPath
+  pure $ mkPaths pd sp
+
+hprop_mkPaths :: Property
+hprop_mkPaths =
   property $ do
-    (projectDir, srcPath) <-
-      forAll $ do
-        projectDir <- filePath
-        srcPath <- sourceFilePath projectDir
-        return (projectDir, srcPath)
-    let path = getDirPathRelativeToSrcDir projectDir srcPath
-    projectDir </> "src" </> path === takeDirectory srcPath
+    (projectDir', srcPath) <- forAll projectDirAndSrcPath
+    let Paths {..} = mkPaths projectDir' srcPath
+    srcFilePath === projectDir </> "src" </> srcFileRelPath
+    srcFileRelPath === srcDirRelPath </> srcFileName
+    projectDir </> "src" </> srcDirRelPath === takeDirectory srcFilePath
+    projectDir </> "src" </> srcDirRelPath </> srcFileName === srcFilePath
+    srcModuleName === reverse (drop 3 $ reverse $ slashesToDots srcFileRelPath)
+    specDirRelPath === srcDirRelPath
+    specModuleName === srcModuleName ++ "Spec"
+    specFilePath === projectDir </> "test" </> specFileRelPath
+    specFileRelPath === specDirRelPath </> specFileName
+    projectDir </> "test" </> specDirRelPath === takeDirectory specFilePath
+    projectDir </> "test" </> specDirRelPath </> specFileName === specFilePath
+    specModuleName ===
+      reverse (drop 3 $ reverse $ slashesToDots specFileRelPath)
