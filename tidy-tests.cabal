@@ -26,6 +26,8 @@ library
                        
 
   build-depends:       base >= 4.11.1.0 && < 4.13
+                     , directory
+                     , filepath
                      
 
   ghc-options:         -Wall

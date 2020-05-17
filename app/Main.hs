@@ -1,7 +1,7 @@
 module Main (main) where
 
-import TidyTests (someFunc)
+import TidyTests (runTidyTests)
 
 
 main :: IO ()
-main = someFunc
+main = runTidyTests
