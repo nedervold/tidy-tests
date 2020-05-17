@@ -36,6 +36,7 @@ jobs:
 
     - name: Build
       run: |
+        stack install tasty-discover
         cabal v2-update
         cabal v2-build --enable-tests --enable-benchmarks
 
